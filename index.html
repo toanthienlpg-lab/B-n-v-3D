@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Danh sách bản vẽ 3D - TOAN Tools</title>
+<style>
+  :root {
+    --cam: #D97757;
+    --cam-dam: #C26142;
+    --cam-nhat: #FFF3EE;
+    --nen: #F5F3EF;
+    --trang: #FFFFFF;
+    --chu: #1F2328;
+    --chu-phu: #636B74;
+    --vien: #E5E0D8;
+    --xanh: #18794E;
+    --bong: 0 4px 16px rgba(24, 24, 24, 0.08);
+  }
+
+  * {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    background: var(--nen);
+    color: var(--chu);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    min-height: 100vh;
+    padding-bottom: calc(28px + env(safe-area-inset-bottom));
+  }
+
+  .header {
+    background: var(--cam);
+    color: var(--trang);
+    padding: calc(16px + env(safe-area-inset-top)) 16px 18px 16px;
+    box-shadow: 0 2px 10px rgba(217, 119, 87, 0.25);
+  }
+
+  .header-inner {
+    max-width: 720px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .brand h1 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: 0.2px;
+  }
+
+  .brand p {
+    margin: 4px 0 0 0;
+    font-size: 13px;
+    opacity: 0.92;
+  }
+
+  .btn-reload {
+    border: 1.5px solid rgba(255, 255, 255, 0.65);
+    background: rgba(255, 255, 255, 0.16);
+    color: var(--trang);
+    font-size: 14px;
+    font-weight: 700;
+    padding: 9px 14px;
+    border-radius: 10px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .btn-reload:active {
+    background: rgba(255, 255, 255, 0.28);
+  }
+
+  .container {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 14px 14px 0 14px;
+  }
+
+  .search-box {
+    display: flex;
+    align-items: center;
+    background: var(--trang);
+    border: 1.5px solid var(--vien);
+    border-radius: 12px;
+    padding: 4px 12px;
+    box-shadow: var(--bong);
+    margin-bottom: 14px;
+  }
+
+  .search-box:focus-within {
+    border-color: var(--cam);
+  }
+
+  .search-box input {
+    width: 100%;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 16px;
+    padding: 10px 0;
+    color: var(--chu);
+  }
+
+  .status-bar {
+    font-size: 13px;
+    color: var(--chu-phu);
+    margin: 0 2px 10px 2px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .card {
+    background: var(--trang);
+    border: 1px solid var(--vien);
+    border-radius: 14px;
+    padding: 14px;
+    box-shadow: var(--bong);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .card-info {
+    min-width: 0;
+  }
+
+  .card-title {
+    font-size: 17px;
+    font-weight: 800;
+    color: var(--chu);
+    word-break: break-word;
+    line-height: 1.3;
+  }
+
+  .card-meta {
+    margin-top: 4px;
+    font-size: 13px;
+    color: var(--chu-phu);
+    word-break: break-all;
+  }
+
+  .card-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 44px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+    border: 1.5px solid transparent;
+    transition: transform 0.1s ease, background 0.15s ease;
+  }
+
+  .btn:active {
+    transform: scale(0.97);
+  }
+
+  .btn-open {
+    background: var(--cam);
+    color: var(--trang);
+  }
+
+  .btn-open:hover {
+    background: var(--cam-dam);
+  }
+
+  .btn-copy {
+    background: var(--cam-nhat);
+    border-color: var(--cam);
+    color: var(--cam);
+  }
+
+  .btn-copy.copied {
+    background: #E9F7EF;
+    border-color: var(--xanh);
+    color: var(--xanh);
+  }
+
+  .empty-box {
+    background: var(--trang);
+    border: 1px dashed var(--vien);
+    border-radius: 14px;
+    padding: 28px 18px;
+    text-align: center;
+    color: var(--chu-phu);
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: calc(22px + env(safe-area-inset-bottom));
+    transform: translateX(-50%) translateY(16px);
+    background: #1F2328;
+    color: var(--trang);
+    padding: 11px 18px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.24);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    max-width: calc(100vw - 32px);
+    text-align: center;
+    z-index: 50;
+  }
+
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <div class="brand">
+      <h1>Bản vẽ 3D công trình</h1>
+      <p id="repoLabel">TOAN Tools • Xem 3D điện thoại</p>
+    </div>
+    <button class="btn-reload" id="btnReload" type="button">Tải lại</button>
+  </div>
+</div>
+
+<div class="container">
+  <div class="search-box">
+    <input id="filterInput" type="search" placeholder="Tìm tên công trình...">
+  </div>
+
+  <div class="status-bar">
+    <span id="countText">Đang tải danh sách...</span>
+  </div>
+
+  <div class="list" id="fileList"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  // Tự nhận diện tài khoản & tên kho từ đường dẫn GitHub Pages; dự phòng kho mặc định
+  var DEFAULT_OWNER = 'toanthienlpg-lab';
+  var DEFAULT_REPO = 'B-n-v-3D';
+
+  function detectRepo() {
+    var host = window.location.hostname || '';
+    var path = window.location.pathname || '';
+    if (host.toLowerCase().endsWith('.github.io')) {
+      var owner = host.split('.')[0];
+      var parts = path.split('/').filter(Boolean);
+      if (owner && parts.length > 0) {
+        return { owner: owner, repo: parts[0] };
+      }
+    }
+    return { owner: DEFAULT_OWNER, repo: DEFAULT_REPO };
+  }
+
+  var info = detectRepo();
+  var BASE_URL = 'https://' + info.owner + '.github.io/' + info.repo + '/';
+  var API_URL = 'https://api.github.com/repos/' + info.owner + '/' + info.repo + '/contents/';
+
+  var repoLabel = document.getElementById('repoLabel');
+  var filterInput = document.getElementById('filterInput');
+  var countText = document.getElementById('countText');
+  var fileListEl = document.getElementById('fileList');
+  var btnReload = document.getElementById('btnReload');
+  var toastEl = document.getElementById('toast');
+
+  repoLabel.textContent = 'TOAN Tools • Kho ' + info.repo;
+
+  var allFiles = [];
+  var toastTimer = null;
+
+  function showToast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () {
+      toastEl.classList.remove('show');
+    }, 2400);
+  }
+
+  function formatSize(bytes) {
+    if (!bytes && bytes !== 0) return '';
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(0) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+  }
+
+  function cleanDisplayName(fileName) {
+    return fileName
+      .replace(/\.html?$/i, '')
+      .replace(/_3D$/i, '')
+      .replace(/[_-]+/g, ' ')
+      .trim() || fileName;
+  }
+
+  function copyText(text, btn) {
+    function onSuccess() {
+      showToast('Đã copy link 3D — dán gửi Zalo cho thợ');
+      var oldText = btn.textContent;
+      btn.textContent = 'Đã copy link!';
+      btn.classList.add('copied');
+      setTimeout(function () {
+        btn.textContent = oldText;
+        btn.classList.remove('copied');
+      }, 1800);
+    }
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(onSuccess).catch(function () {
+        fallbackCopy(text, onSuccess);
+      });
+    } else {
+      fallbackCopy(text, onSuccess);
+    }
+  }
+
+  function fallbackCopy(text, onSuccess) {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    try {
+      document.execCommand('copy');
+      onSuccess();
+    } catch (e) {
+      window.prompt('Hãy sao chép đường link bên dưới:', text);
+    }
+    document.body.removeChild(ta);
+  }
+
+  function renderList() {
+    var kw = (filterInput.value || '').trim().toLowerCase();
+    var filtered = allFiles.filter(function (f) {
+      if (!kw) return true;
+      return f.name.toLowerCase().indexOf(kw) !== -1 ||
+             cleanDisplayName(f.name).toLowerCase().indexOf(kw) !== -1;
+    });
+
+    countText.textContent = filtered.length + ' bản vẽ 3D';
+    fileListEl.innerHTML = '';
+
+    if (filtered.length === 0) {
+      fileListEl.innerHTML = '<div class="empty-box">' +
+        (allFiles.length === 0
+          ? 'Chưa có file 3D (.html) nào trong kho.<br>Hãy tải file xuất từ SketchUp lên GitHub.'
+          : 'Không tìm thấy bản vẽ nào khớp từ khóa.') +
+        '</div>';
+      return;
+    }
+
+    var frag = document.createDocumentFragment();
+    filtered.forEach(function (file) {
+      var fullUrl = BASE_URL + encodeURIComponent(file.name);
+      var card = document.createElement('div');
+      card.className = 'card';
+
+      var infoDiv = document.createElement('div');
+      infoDiv.className = 'card-info';
+
+      var title = document.createElement('div');
+      title.className = 'card-title';
+      title.textContent = cleanDisplayName(file.name);
+
+      var meta = document.createElement('div');
+      meta.className = 'card-meta';
+      meta.textContent = file.name + ' • ' + formatSize(file.size);
+
+      infoDiv.appendChild(title);
+      infoDiv.appendChild(meta);
+
+      var actions = document.createElement('div');
+      actions.className = 'card-actions';
+
+      var openBtn = document.createElement('a');
+      openBtn.className = 'btn btn-open';
+      openBtn.href = fullUrl;
+      openBtn.textContent = 'Mở xem 3D';
+
+      var copyBtn = document.createElement('button');
+      copyBtn.type = 'button';
+      copyBtn.className = 'btn btn-copy';
+      copyBtn.textContent = 'Copy link Zalo';
+      copyBtn.addEventListener('click', function () {
+        copyText(fullUrl, copyBtn);
+      });
+
+      actions.appendChild(openBtn);
+      actions.appendChild(copyBtn);
+
+      card.appendChild(infoDiv);
+      card.appendChild(actions);
+      frag.appendChild(card);
+    });
+
+    fileListEl.appendChild(frag);
+  }
+
+  function loadFiles() {
+    countText.textContent = 'Đang tải danh sách...';
+    fileListEl.innerHTML = '';
+
+    fetch(API_URL, { cache: 'no-store' })
+      .then(function (res) {
+        if (!res.ok) throw new Error('Mã lỗi ' + res.status);
+        return res.json();
+      })
+      .then(function (items) {
+        if (!Array.isArray(items)) throw new Error('Dữ liệu không hợp lệ');
+        allFiles = items.filter(function (it) {
+          return it.type === 'file' &&
+                 /\.html?$/i.test(it.name) &&
+                 it.name.toLowerCase() !== 'index.html';
+        }).sort(function (a, b) {
+          return a.name.localeCompare(b.name, 'vi');
+        });
+        renderList();
+      })
+      .catch(function (err) {
+        countText.textContent = 'Không tải được danh sách';
+        fileListEl.innerHTML = '<div class="empty-box">Không lấy được danh sách file từ GitHub (' +
+          err.message + ').<br>Hãy kiểm tra mạng hoặc bấm <strong>Tải lại</strong> sau 1 phút.</div>';
+      });
+  }
+
+  filterInput.addEventListener('input', renderList);
+  btnReload.addEventListener('click', loadFiles);
+
+  loadFiles();
+})();
+</script>
+</body>
+</html>
